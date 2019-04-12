@@ -3,3 +3,5 @@ gin-bin.exe
 .env
 gin-bin
 gin-bin.exe
+
+data/mysql/*
