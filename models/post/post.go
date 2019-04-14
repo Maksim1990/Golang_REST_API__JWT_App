@@ -1,7 +1,6 @@
 package post
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/goRESTapi/models"
@@ -112,11 +111,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	case title == "":
 		output.ExceptionMessage(w, "Title can't be empty", 400)
 	default:
-		stmt, err := db.Prepare("INSERT INTO users(title, description) VALUES(?,?)")
+		stmt, err := db.Prepare("INSERT INTO posts(user_id,title, description) VALUES(?,?,?)")
 		if err != nil {
 			panic(err.Error())
 		}
-		res, err := stmt.Exec(title, description)
+		res, err := stmt.Exec(1,title, description)
 		if err != nil {
 			panic(err.Error())
 		}

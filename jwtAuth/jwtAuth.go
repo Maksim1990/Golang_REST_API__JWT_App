@@ -37,7 +37,10 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 
 	db := database.DBConn()
 
-	err = db.QueryRow("SELECT username FROM users WHERE username=?", username).Scan(&user)
+	selDB, err := db.Query("SELECT id,username FROM users WHERE username=?", username)
+	if err != nil {
+		panic(err.Error())
+	}
 	switch {
 	case username == "":
 		output.ExceptionMessage(w, "User name can't be empty ", 400)
@@ -46,18 +49,27 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 	case err == sql.ErrNoRows:
 		output.ExceptionMessage(w, "User not found", 404)
 	default:
-
-		ttl := time.Duration(expireTokenTime) * time.Second
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"username": user.Username,
-			"password": user.Password,
-			"exp":      time.Now().UTC().Add(ttl).Unix(),
-		})
-		tokenString, error := token.SignedString([]byte(jwtSecret))
-		if error != nil {
-			fmt.Println(error)
+		for selDB.Next() {
+			var username string
+			var id int
+			err = selDB.Scan(&id,&username)
+			if err != nil {
+				panic(err.Error())
+			}
+			user.Username = username
+			user.Id = id
+			ttl := time.Duration(expireTokenTime) * time.Second
+			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"id": user.Id,
+				"username": user.Username,
+				"exp":      time.Now().UTC().Add(ttl).Unix(),
+			})
+			tokenString, error := token.SignedString([]byte(jwtSecret))
+			if error != nil {
+				fmt.Println(error)
+			}
+			json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 		}
-		json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 	}
 	defer db.Close()
 }
