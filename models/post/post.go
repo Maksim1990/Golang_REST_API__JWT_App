@@ -8,31 +8,31 @@ import (
 	"github.com/goRESTapi/models"
 	"github.com/goRESTapi/output"
 	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-func GetUserList(w http.ResponseWriter, req *http.Request) {
+func GetPostList(w http.ResponseWriter, req *http.Request) {
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT id,username,password FROM users ORDER BY id DESC")
+	selDB, err := db.Query("SELECT id,user_id,title,description FROM posts ORDER BY id DESC")
 	if err != nil {
 		panic(err.Error())
 	}
-	usr := models.User{}
-	res := []models.User{}
+	post := models.Post{}
+	res := []models.Post{}
 	for selDB.Next() {
-		var id int
-		var username, password string
-		err = selDB.Scan(&id, &username, &password)
+		var id, user_id int
+		var title, description string
+		err = selDB.Scan(&id, &user_id, &title, &description)
 		if err != nil {
 			panic(err.Error())
 		}
-		usr.Id = id
-		usr.Username = username
-		usr.Password = password
-		res = append(res, usr)
+		post.ID = id
+		post.UserId = user_id
+		post.Title = title
+		post.Description = description
+		res = append(res, post)
 	}
 
 	//-- Generate JSON data list response
@@ -41,56 +41,45 @@ func GetUserList(w http.ResponseWriter, req *http.Request) {
 	defer db.Close()
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
+func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId := params["id"]
+	postId := params["id"]
 	decoder := json.NewDecoder(r.Body)
-	var user models.User
-	err := decoder.Decode(&user)
+	var post models.Post
+	err := decoder.Decode(&post)
 	if err != nil {
 		panic(err)
 	}
-	username := user.Username
-	password := user.Password
+	title := post.Title
+	description := post.Description
 	db := database.DBConn()
 
 	switch {
-	case username == "":
-		output.ExceptionMessage(w, "User name can't be empty", 400)
-	case password == "":
-		output.ExceptionMessage(w, "Password can't be empty", 400)
+	case title == "":
+		output.ExceptionMessage(w, "Post title can't be empty", 400)
 	case err != nil:
 		output.ExceptionMessage(w, err.Error(), 404)
 	default:
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			panic(err.Error())
-		}
-		selDB, err := db.Query("SELECT username,password FROM users WHERE id=?", userId)
+		var userId int
+		err = db.QueryRow("SELECT user_id FROM posts WHERE id=?", postId).Scan(&userId)
 		if err != nil {
 			panic(err.Error())
 		} else {
-
-			selUserRange := selDB.Next()
-			if !selUserRange {
-				output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
-			} else {
-				_, err = db.Query("UPDATE users SET username=?, password=? WHERE id=?", username, hashedPassword, userId)
-				if err != nil {
-					panic(err.Error())
-				}
-				user := models.User{}
-				id, err := strconv.Atoi(userId)
-				if err != nil {
-					panic(err.Error())
-				}
-				user.Id = id
-				user.Username = username
-				user.Password = string(hashedPassword)
-
-				//-- Generate JSON response
-				output.JSONResponse(w, user)
+			_, err = db.Query("UPDATE posts SET title=?,description=? WHERE id=?", title, description, postId)
+			if err != nil {
+				panic(err.Error())
 			}
+			id, err := strconv.Atoi(postId)
+			if err != nil {
+				panic(err.Error())
+			}
+			post.ID = id
+			post.UserId = userId
+			post.Title = title
+			post.Description = description
+
+			//-- Generate JSON response
+			output.JSONResponse(w, post)
 		}
 	}
 
@@ -143,54 +132,57 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	defer db.Close()
 }
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func DeletePost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId := params["id"]
+	postId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT username,password FROM users WHERE id=?", userId)
+	selDB, err := db.Query("SELECT title FROM posts WHERE id=?", postId)
 	if err != nil {
 		panic(err.Error())
 	} else {
-		selUserRange := selDB.Next()
-		if !selUserRange {
-			output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
+		selPostRange := selDB.Next()
+		if !selPostRange {
+			output.ExceptionMessage(w, fmt.Sprintf("Post with ID %v was not found", postId), 404)
 		} else {
-			_, err := db.Query("DELETE FROM users WHERE id=?", userId)
+			_, err := db.Query("DELETE FROM posts WHERE id=?", postId)
 			if err != nil {
 				panic(err.Error())
 			}
-			output.HttpResponse(w, fmt.Sprintf("User with ID %v was successfully deleted", userId), 200)
+			output.HttpResponse(w, fmt.Sprintf("Post with ID %v was successfully deleted", postId), 200)
 		}
 	}
 
 	defer db.Close()
 }
-func GetUser(w http.ResponseWriter, r *http.Request) {
+func GetPost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	userId := params["id"]
+	postId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT username FROM users WHERE id=?", userId)
+	selDB, err := db.Query("SELECT user_id,title,description FROM posts WHERE id=?", postId)
 	if err != nil {
 		panic(err.Error())
 	}
-	user := models.User{}
+	post := models.Post{}
 	for selDB.Next() {
-		var username string
-		err = selDB.Scan(&username)
+		var userId int
+		var title, description string
+		err = selDB.Scan(&userId, &title, &description)
 		if err != nil {
 			panic(err.Error())
 		}
-		user.Username = username
+		post.Title = title
+		post.Description = description
+		post.UserId = userId
 
-		id, err := strconv.Atoi(userId)
+		id, err := strconv.Atoi(postId)
 		if err != nil {
 			panic(err.Error())
 		}
-		user.Id = id
+		post.ID = id
 	}
 
 	//-- Generate JSON response
-	output.JSONResponse(w, user)
+	output.JSONResponse(w, post)
 
 	defer db.Close()
 

@@ -40,6 +40,10 @@ func main() {
 	router.HandleFunc("/users/{id}/update", jwtAuth.ValidateMiddleware(user.UpdateUser)).Methods("PUT")
 
 	router.HandleFunc("/posts", jwtAuth.ValidateMiddleware(post.CreatePost)).Methods("POST")
+	router.HandleFunc("/posts", jwtAuth.ValidateMiddleware(post.GetPostList)).Methods("GET")
+	router.HandleFunc("/posts/{id}", jwtAuth.ValidateMiddleware(post.GetPost)).Methods("GET")
+	router.HandleFunc("/posts/{id}", jwtAuth.ValidateMiddleware(post.DeletePost)).Methods("DELETE")
+	router.HandleFunc("/posts/{id}/update", jwtAuth.ValidateMiddleware(post.UpdatePost)).Methods("PUT")
 
 	http.ListenAndServe(":9090", router)
 }
