@@ -12,7 +12,15 @@ type UserBase struct {
 type User struct {
 	UserBase
 	Password string `json:"-"`
+	Posts   []Post `json:"posts,omitempty"`
 }
+
+type Post struct {
+	ID  int `json:"id"`
+	Title string `json:"title"`
+	Description string `json:"description,omitempty"`
+}
+
 type UserSecure struct {
 	UserBase
 	Password string `json:"password"`

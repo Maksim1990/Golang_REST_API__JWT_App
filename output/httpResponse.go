@@ -14,7 +14,8 @@ func ExceptionMessage(w http.ResponseWriter, message string, statusCode int){
   generateOutput(w, message, statusCode)
 }
 
-func JSONResponse(w http.ResponseWriter,user models.User){
+//func JSONResponse(w http.ResponseWriter,user models.User){
+func JSONResponse(w http.ResponseWriter,i interface{}){
     m := make(map[string]models.User)
     m["data"] = user
 

@@ -5,6 +5,7 @@ import (
 	_ "github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goRESTapi/jwtAuth"
+	"github.com/goRESTapi/models/post"
 	"github.com/goRESTapi/models/user"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -37,6 +38,8 @@ func main() {
 	router.HandleFunc("/users/{id}", jwtAuth.ValidateMiddleware(user.GetUser)).Methods("GET")
 	router.HandleFunc("/users/{id}", jwtAuth.ValidateMiddleware(user.DeleteUser)).Methods("DELETE")
 	router.HandleFunc("/users/{id}/update", jwtAuth.ValidateMiddleware(user.UpdateUser)).Methods("PUT")
+
+	router.HandleFunc("/posts", jwtAuth.ValidateMiddleware(post.CreatePost)).Methods("POST")
 
 	http.ListenAndServe(":9090", router)
 }
