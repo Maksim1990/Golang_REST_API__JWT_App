@@ -7,6 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goRESTapi/database"
+	"github.com/goRESTapi/models"
 	"github.com/goRESTapi/output"
 	"github.com/gorilla/context"
 	"net/http"
@@ -15,15 +16,7 @@ import (
 	"time"
 )
 
-type JwtToken struct {
-	Token string `json:"token"`
-}
 
-type User struct {
-	Id       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 //-- Duration of validation period of JWT Token
 var expireTokenTime = 3600
@@ -33,13 +26,14 @@ var jwtSecret = os.Getenv("JWT_SECRET")
 
 func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
-	var user User
+	var user models.UserSecure
 	err := decoder.Decode(&user)
 	if err != nil {
 		panic(err)
 	}
 	username := user.Username
 	password := user.Password
+
 
 	db := database.DBConn()
 
@@ -63,7 +57,7 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 		if error != nil {
 			fmt.Println(error)
 		}
-		json.NewEncoder(w).Encode(JwtToken{Token: tokenString})
+		json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 	}
 	defer db.Close()
 }
@@ -81,18 +75,18 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 					return []byte(jwtSecret), nil
 				})
 				if error != nil {
-					json.NewEncoder(w).Encode(output.Exception{Message: error.Error()})
+					json.NewEncoder(w).Encode(models.Exception{Message: error.Error()})
 					return
 				}
 				if token.Valid {
 					context.Set(req, "decoded", token.Claims)
 					next(w, req)
 				} else {
-					json.NewEncoder(w).Encode(output.Exception{Message: "Invalid authorization token"})
+					json.NewEncoder(w).Encode(models.Exception{Message: "Invalid authorization token"})
 				}
 			}
 		} else {
-			json.NewEncoder(w).Encode(output.Exception{Message: "An authorization header is required"})
+			json.NewEncoder(w).Encode(models.Exception{Message: "An authorization header is required"})
 		}
 	})
 }
