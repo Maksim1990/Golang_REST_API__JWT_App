@@ -3,13 +3,15 @@ package post
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/goRESTapi/database"
+	"github.com/goRESTapi/jwtAuth"
 	"github.com/goRESTapi/models"
 	"github.com/goRESTapi/output"
-	"github.com/goRESTapi/database"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func GetUserList(w http.ResponseWriter, req *http.Request) {
@@ -34,7 +36,7 @@ func GetUserList(w http.ResponseWriter, req *http.Request) {
 	}
 
 	//-- Generate JSON data list response
-	output.JSONListResponse(w,res)
+	output.JSONListResponse(w, res)
 
 	defer db.Close()
 }
@@ -106,7 +108,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	description := post.Description
 	db := database.DBConn()
 
-
 	switch {
 	case title == "":
 		output.ExceptionMessage(w, "Title can't be empty", 400)
@@ -115,19 +116,29 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err.Error())
 		}
-		res, err := stmt.Exec(1,title, description)
-		if err != nil {
-			panic(err.Error())
+		authorizationHeader := r.Header.Get("authorization")
+		if authorizationHeader != "" {
+			bearerToken := strings.Split(authorizationHeader, " ")
+			if len(bearerToken) == 2 {
+				tokenData, _ := jwtAuth.ExtractClaims(bearerToken[1])
+				userId := tokenData["id"]
+				res, err := stmt.Exec(userId, title, description)
+				if err != nil {
+					panic(err.Error())
+				}
+
+				post := models.Post{}
+				postId, _ := res.LastInsertId()
+				post.ID = int(postId)
+				post.Title = title
+				post.UserId = int(userId.(float64))
+				post.Description = description
+
+				//-- Generate JSON response
+				output.JSONResponse(w, post)
+			}
 		}
 
-		post := models.Post{}
-		postId, _ := res.LastInsertId()
-		post.ID = int(postId)
-		post.Title = title
-		post.Description = description
-
-		//-- Generate JSON response
-		output.JSONResponse(w, post)
 	}
 
 	defer db.Close()

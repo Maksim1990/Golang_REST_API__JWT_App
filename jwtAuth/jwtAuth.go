@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"log"
 )
 
 
@@ -68,10 +69,32 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 			if error != nil {
 				fmt.Println(error)
 			}
+			tokenData,_:=ExtractClaims(tokenString)
+			fmt.Println(tokenData)
 			json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 		}
 	}
 	defer db.Close()
+}
+
+func ExtractClaims(tokenStr string) (jwt.MapClaims, bool) {
+	hmacSecretString := jwtSecret
+	hmacSecret := []byte(hmacSecretString)
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// check token signing method etc
+		return hmacSecret, nil
+	})
+
+	if err != nil {
+		return nil, false
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, true
+	} else {
+		log.Printf("Invalid JWT Token")
+		return nil, false
+	}
 }
 
 func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
