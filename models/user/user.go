@@ -173,7 +173,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	user := models.User{}
-	for selDB.Next() {
+	if !selDB.Next(){
+		output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
+	}else {
 		var username string
 		err = selDB.Scan(&username)
 		if err != nil {
@@ -206,13 +208,13 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 			post.UserId = id
 			post.ID = postId
 			res = append(res, post)
+
+			user.Posts = res
 		}
-		user.Posts = res
+
+		//-- Generate JSON response
+		output.JSONResponse(w, user)
 	}
-
-	//-- Generate JSON response
-	output.JSONResponse(w, user)
-
 	defer db.Close()
 
 }
