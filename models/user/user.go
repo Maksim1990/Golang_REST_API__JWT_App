@@ -189,6 +189,28 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 			panic(err.Error())
 		}
 		user.Id = id
+
+		//-- Get posts linked to this user
+		res := []models.Post{}
+		selDB, err := db.Query("SELECT id,title,description FROM posts WHERE user_id=?", id)
+		if err != nil {
+			panic(err.Error())
+		}
+		post := models.Post{}
+		for selDB.Next() {
+			var postId int
+			var title, description string
+			err = selDB.Scan(&postId, &title, &description)
+			if err != nil {
+				panic(err.Error())
+			}
+			post.Title = title
+			post.Description = description
+			post.UserId = id
+			post.ID = postId
+			res = append(res, post)
+		}
+		user.Posts = res
 	}
 
 	//-- Generate JSON response
