@@ -69,8 +69,6 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 			if error != nil {
 				fmt.Println(error)
 			}
-			tokenData,_:=ExtractClaims(tokenString)
-			fmt.Println(tokenData)
 			json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 		}
 	}

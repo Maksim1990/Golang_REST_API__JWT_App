@@ -176,45 +176,48 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	user := models.User{}
-	for selDB.Next() {
-		var username string
-		err = selDB.Scan(&username)
-		if err != nil {
-			panic(err.Error())
-		}
-		user.Username = username
-
-		id, err := strconv.Atoi(userId)
-		if err != nil {
-			panic(err.Error())
-		}
-		user.Id = id
-
-		//-- Get posts linked to this user
-		res := []models.Post{}
-		selDB, err := db.Query("SELECT id,title,description FROM posts WHERE user_id=?", id)
-		if err != nil {
-			panic(err.Error())
-		}
-		post := models.Post{}
-		for selDB.Next() {
-			var postId int
-			var title, description string
-			err = selDB.Scan(&postId, &title, &description)
+	if !selDB.Next(){
+		output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
+	}else{
+			var username string
+			err = selDB.Scan(&username)
 			if err != nil {
 				panic(err.Error())
 			}
-			post.Title = title
-			post.Description = description
-			post.UserId = id
-			post.ID = postId
-			res = append(res, post)
-		}
-		user.Posts = res
+			user.Username = username
+
+			id, err := strconv.Atoi(userId)
+			if err != nil {
+				panic(err.Error())
+			}
+			user.Id = id
+
+			//-- Get posts linked to this user
+			res := []models.Post{}
+			selDB, err := db.Query("SELECT id,title,description FROM posts WHERE user_id=?", id)
+			if err != nil {
+				panic(err.Error())
+			}
+			post := models.Post{}
+			for selDB.Next() {
+				var postId int
+				var title, description string
+				err = selDB.Scan(&postId, &title, &description)
+				if err != nil {
+					panic(err.Error())
+				}
+				post.Title = title
+				post.Description = description
+				post.UserId = id
+				post.ID = postId
+				res = append(res, post)
+			}
+			user.Posts = res
+
+		//-- Generate JSON response
+		output.JSONResponse(w, user)
 	}
 
-	//-- Generate JSON response
-	output.JSONResponse(w, user)
 
 	defer db.Close()
 
