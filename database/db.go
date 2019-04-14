@@ -1,20 +1,18 @@
 package database
 
 import (
-  "os"
-  "database/sql"
-  _ "github.com/go-sql-driver/mysql"
+    "os"
+    "database/sql"
+    _ "github.com/lib/pq"
 )
 
 func DBConn() (db *sql.DB) {
-    dbDriver := os.Getenv("DB_ENGINE")
-    dbUser := os.Getenv("DB_USER")
-    dbPass := os.Getenv("DB_PASSWORD")
-    dbName := os.Getenv("DB_NAME")
-    db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp(db:3306)/"+dbName)
-
-    //-- For non docker environment
-    //db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
+    dbDriver := os.Getenv("DB_PG_ENGINE")
+    dbUser := os.Getenv("DB_PG_USER")
+    dbPass := os.Getenv("DB_PG_PASSWORD")
+    dbName := os.Getenv("DB_PG_NAME")
+    connStr := dbDriver+"://"+dbUser+":"+dbPass+"@db:5432/"+dbName+"?sslmode=disable"
+    db, err := sql.Open("postgres", connStr)
     if err != nil {
         panic(err.Error())
     }

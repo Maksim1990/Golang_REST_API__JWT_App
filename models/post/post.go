@@ -61,11 +61,11 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		output.ExceptionMessage(w, err.Error(), 404)
 	default:
 		var userId int
-		err = db.QueryRow("SELECT user_id FROM posts WHERE id=?", postId).Scan(&userId)
+		err = db.QueryRow("SELECT user_id FROM posts WHERE id=$1", postId).Scan(&userId)
 		if err != nil {
 			panic(err.Error())
 		} else {
-			_, err = db.Query("UPDATE posts SET title=?,description=? WHERE id=?", title, description, postId)
+			_, err = db.Query("UPDATE posts SET title=$1,description=$2 WHERE id=$3", title, description, postId)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -101,23 +101,22 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	case title == "":
 		output.ExceptionMessage(w, "Title can't be empty", 400)
 	default:
-		stmt, err := db.Prepare("INSERT INTO posts(user_id,title, description) VALUES(?,?,?)")
-		if err != nil {
-			panic(err.Error())
-		}
+
 		authorizationHeader := r.Header.Get("authorization")
 		if authorizationHeader != "" {
 			bearerToken := strings.Split(authorizationHeader, " ")
 			if len(bearerToken) == 2 {
 				tokenData, _ := jwtAuth.ExtractClaims(bearerToken[1])
 				userId := tokenData["id"]
-				res, err := stmt.Exec(userId, title, description)
+
+				lastInsertId := 0
+				err = db.QueryRow("INSERT INTO posts(user_id,title, description) VALUES($1,$2,$3) RETURNING id", userId, title, description).Scan(&lastInsertId)
+
 				if err != nil {
 					panic(err.Error())
 				}
-
 				post := models.Post{}
-				postId, _ := res.LastInsertId()
+				postId:= lastInsertId
 				post.ID = int(postId)
 				post.Title = title
 				post.UserId = int(userId.(float64))
@@ -136,7 +135,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	postId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT title FROM posts WHERE id=?", postId)
+	selDB, err := db.Query("SELECT title FROM posts WHERE id=$1", postId)
 	if err != nil {
 		panic(err.Error())
 	} else {
@@ -144,7 +143,7 @@ func DeletePost(w http.ResponseWriter, r *http.Request) {
 		if !selPostRange {
 			output.ExceptionMessage(w, fmt.Sprintf("Post with ID %v was not found", postId), 404)
 		} else {
-			_, err := db.Query("DELETE FROM posts WHERE id=?", postId)
+			_, err := db.Query("DELETE FROM posts WHERE id=$1", postId)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -158,7 +157,7 @@ func GetPost(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	postId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT user_id,title,description FROM posts WHERE id=?", postId)
+	selDB, err := db.Query("SELECT user_id,title,description FROM posts WHERE id=$1", postId)
 	if err != nil {
 		panic(err.Error())
 	}

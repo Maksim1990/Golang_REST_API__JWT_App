@@ -2,18 +2,17 @@ version: '3'
 services:
     db:
         build:
-            context: ./Docker/mysql
+            context: ./Docker/postgres
+        restart: always
         environment:
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_DATABASE: golangDB
-            MYSQL_USER: docker
-            MYSQL_PASSWORD: docker
-        container_name: golang_db
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_DB: golangDB
         ports:
-            - "3306:3306"
+            - "5432:5432"
         tty: true
         volumes:
-            - ./data/mysql:/var/lib/mysql
+            - db-data:/var/lib/postgresql/data
     app:
         build:
             context: ./Docker/Golang
@@ -25,3 +24,6 @@ services:
         tty: true
         depends_on:
             - db
+
+volumes:
+    db-data:

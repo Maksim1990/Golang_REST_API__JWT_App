@@ -13,6 +13,7 @@ RUN go get "github.com/gin-gonic/gin"
 RUN go get "github.com/codegangsta/gin"
 RUN go get "github.com/gorilla/context"
 RUN go get "golang.org/x/crypto/bcrypt"
+RUN go get "github.com/lib/pq"
 
 # Install api binary globally within container
 #RUN go install github.com/goRESTapi

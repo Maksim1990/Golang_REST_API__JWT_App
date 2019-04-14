@@ -38,7 +38,7 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 
 	db := database.DBConn()
 
-	selDB, err := db.Query("SELECT id,username FROM users WHERE username=?", username)
+	selDB, err := db.Query("SELECT id,username FROM users WHERE username=$1", username)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -69,8 +69,6 @@ func GetAuthenticationToken(w http.ResponseWriter, req *http.Request) {
 			if error != nil {
 				fmt.Println(error)
 			}
-			tokenData,_:=ExtractClaims(tokenString)
-			fmt.Println(tokenData)
 			json.NewEncoder(w).Encode(models.JwtToken{Token: tokenString})
 		}
 	}

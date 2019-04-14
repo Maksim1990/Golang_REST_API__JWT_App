@@ -65,7 +65,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err.Error())
 		}
-		selDB, err := db.Query("SELECT username,password FROM users WHERE id=?", userId)
+		selDB, err := db.Query("SELECT username,password FROM users WHERE id=$1", userId)
 		if err != nil {
 			panic(err.Error())
 		} else {
@@ -74,7 +74,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 			if !selUserRange {
 				output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
 			} else {
-				_, err = db.Query("UPDATE users SET username=?, password=? WHERE id=?", username, hashedPassword, userId)
+				_, err = db.Query("UPDATE users SET username=$1, password=$2 WHERE id=$3", username, hashedPassword, userId)
 				if err != nil {
 					panic(err.Error())
 				}
@@ -107,7 +107,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	password := user.Password
 	db := database.DBConn()
 
-	err = db.QueryRow("SELECT username FROM users WHERE username=?", username).Scan(&user)
+	err = db.QueryRow("SELECT username FROM users WHERE username=$1", username).Scan(&user)
 	switch {
 	case username == "":
 		output.ExceptionMessage(w, "User name can't be empty", 400)
@@ -119,17 +119,14 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			panic(err.Error())
 		}
 
-		stmt, err := db.Prepare("INSERT INTO users(username, password) VALUES(?,?)")
-		if err != nil {
-			panic(err.Error())
-		}
-		res, err := stmt.Exec(username, hashedPassword)
-		if err != nil {
-			panic(err.Error())
-		}
+		lastInsertId := 0
+		err = db.QueryRow("INSERT INTO users(username, password) VALUES($1,$2) RETURNING id", username, hashedPassword).Scan(&lastInsertId)
 
+		if err != nil {
+			panic(err.Error())
+		}
 		user := models.User{}
-		userId, _ := res.LastInsertId()
+		userId:= lastInsertId
 		user.Id = int(userId)
 		user.Username = username
 		user.Password = string(hashedPassword)
@@ -149,7 +146,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT username,password FROM users WHERE id=?", userId)
+	selDB, err := db.Query("SELECT username,password FROM users WHERE id=$1", userId)
 	if err != nil {
 		panic(err.Error())
 	} else {
@@ -157,7 +154,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		if !selUserRange {
 			output.ExceptionMessage(w, fmt.Sprintf("User with ID %v was not found", userId), 404)
 		} else {
-			_, err := db.Query("DELETE FROM users WHERE id=?", userId)
+			_, err := db.Query("DELETE FROM users WHERE id=$1", userId)
 			if err != nil {
 				panic(err.Error())
 			}
@@ -171,7 +168,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId := params["id"]
 	db := database.DBConn()
-	selDB, err := db.Query("SELECT username FROM users WHERE id=?", userId)
+	selDB, err := db.Query("SELECT username FROM users WHERE id=$1", userId)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -192,7 +189,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 		//-- Get posts linked to this user
 		res := []models.Post{}
-		selDB, err := db.Query("SELECT id,title,description FROM posts WHERE user_id=?", id)
+		selDB, err := db.Query("SELECT id,title,description FROM posts WHERE user_id=$1", id)
 		if err != nil {
 			panic(err.Error())
 		}
