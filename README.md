@@ -7,7 +7,7 @@
 - Main application functionality is available in **Docker**
 - For development purposes **[REST API Tutorial](https://github.com/gin-gonic/gin)** HTTP Golang framework is available
 
-# [REST API Tutorial](https://github.com/Maksim1990/Golang_REST_API__JWT_App/blob/develop/API_GUIDE.md)
+# CHECK ALSO USEFUL [REST API Tutorial](https://github.com/Maksim1990/Golang_REST_API__JWT_App/blob/develop/API_GUIDE.md)
 
 ### How To Run
 
