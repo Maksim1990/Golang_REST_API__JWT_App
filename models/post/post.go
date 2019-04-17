@@ -63,7 +63,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		var userId int
 		err = db.QueryRow("SELECT user_id FROM posts WHERE id=?", postId).Scan(&userId)
 		if err != nil {
-			panic(err.Error())
+			output.ExceptionMessage(w, fmt.Sprintf("Post with ID %v was not found", postId), 404)
 		} else {
 			_, err = db.Query("UPDATE posts SET title=?,description=? WHERE id=?", title, description, postId)
 			if err != nil {

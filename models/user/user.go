@@ -44,7 +44,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	userId := params["id"]
 	decoder := json.NewDecoder(r.Body)
-	var user models.User
+	var user models.UserSecure
 	err := decoder.Decode(&user)
 	if err != nil {
 		panic(err)
@@ -56,8 +56,6 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case username == "":
 		output.ExceptionMessage(w, "User name can't be empty", 400)
-	case password == "":
-		output.ExceptionMessage(w, "Password can't be empty", 400)
 	case err != nil:
 		output.ExceptionMessage(w, err.Error(), 404)
 	default:

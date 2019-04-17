@@ -15,5 +15,5 @@ CREATE TABLE posts
     `description` varchar(255),
     `created_at`  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `updated_at`  timestamp    NOT NULL DEFAULT '0000-00-00 00:00:00',
-    FOREIGN KEY (`user_id`) REFERENCES users (id) ON DELETE NO ACTION ON UPDATE NO ACTION
+    FOREIGN KEY (`user_id`) REFERENCES users (id) ON DELETE CASCADE  ON UPDATE CASCADE
 );
