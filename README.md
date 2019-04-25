@@ -1,36 +1,33 @@
-# Golang_CRUD_App_with_MySQL
-Golcang CRUD and Authentification application with MySQL database connection
+# Golang CRUD REST API App with JWT Token authentication
+
+### About Application
+- App is based on **Go 1.12**
+- DB in develop branch is **MySQL**
+- In order to test application with **PostgreSQL** db please check **MNT-1_REST_API_on_PostgreSQL_db** branch
+- Main application functionality is available in **Docker**
+- For development purposes **[REST API Tutorial](https://github.com/gin-gonic/gin)** HTTP Golang framework is available
+
+# CHECK ALSO USEFUL [REST API Tutorial](https://github.com/Maksim1990/Golang_REST_API__JWT_App/blob/develop/API_GUIDE.md)
 
 ### How To Run
 
-1) Create a new database with a users table
-
-```sql
-CREATE TABLE users(
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50),
-    password VARCHAR(120)
-);
-```
-
-2) Go get both required packages listed below
+1) Build and start Docker containers for start application
 
 ```
-go get golang.org/x/crypto/bcrypt
-
-go get github.com/go-sql-driver/mysql
+docker-compose build && docker-compose up -d
 ```
 
-3) In  **signup.go** and **main.go** set correct DB connection
+2) Enter in running application container
 
-4) For CRUD example run
 ```
-go run main.go
+docker exec -it golang_app bash 
 ```
-and navigate to [http://localhost:8090/](http://localhost:8090/)
 
-4) For Authentification example run
+3) Navigate to app folder and run app with GIN framework command
 ```
-go run signup.go
+cd src/github.com/goRESTapi && gin -i -all rin main.go
 ```
-and navigate to [http://localhost:8080/](http://localhost:8080/)
+
+4) Now your application is running on **9090** port [http://localhost:9090/](http://localhost:9090/)
+
+5) You can use [Postman](https://www.getpostman.com/) or any other tool for testing REST API app
