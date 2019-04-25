@@ -25,7 +25,7 @@ docker exec -it golang_app bash
 
 3) Navigate to app folder and run app with GIN framework command
 ```
-cd src/github.com/goRESTapi && gin -i -all rin main.go
+cd src/github.com/goRESTapi && gin -i -all run main.go
 ```
 
 4) Now your application is running on **9090** port [http://localhost:9090/](http://localhost:9090/)
