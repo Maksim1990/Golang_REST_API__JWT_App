@@ -23,11 +23,19 @@ docker-compose build && docker-compose up -d
 docker exec -it golang_app bash 
 ```
 
-3) Navigate to app folder and run app with GIN framework command
+3) Navigate to app folder
 ```
-cd src/github.com/goRESTapi && gin -i -all run main.go
+cd src/github.com/goRESTapi
+```
+4) Set required credentials in **.env** file:
+```
+cp .env.dist .env
+```
+5) Run app with GIN framework command
+```
+gin -i -all run main.go
 ```
 
-4) Now your application is running on **9090** port [http://localhost:9090/](http://localhost:9090/)
+6) Now your application is running on **9090** port [http://localhost:9090/](http://localhost:9090/)
 
-5) You can use [Postman](https://www.getpostman.com/) or any other tool for testing REST API app
+7) You can use [Postman](https://www.getpostman.com/) or any other tool for testing REST API app
