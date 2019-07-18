@@ -1,4 +1,4 @@
-# Golang CRUD REST API App with JWT Token authentication
+# Golang CRUD REST API App with JWT Token authentication 
 
 ### About Application
 - App is based on **Go 1.12**
